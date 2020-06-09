@@ -15,20 +15,19 @@
 
 ###
 # configuration
-# default values can be overridden by passing them as env vars
+# default values can be overrzidden by passing them as env vars
 # e.g. sudo DEVICE=/dev/sda READ=false ./shrink.sh
 ###
 USER=${USER:-`whoami`}                    # specify user who should own output files
-DEVICE=${DEVICE:-/dev/sdd}                # source and target SD card device, examples: /dev/sdd, /dev/mmcblk0 ...
-IMAGE_NAME=${IMAGE_NAME:-image}           # image name, alternative with date and time: "image_$(date +"%y%m%d%H%M%S")"
+DEVICE=${DEVICE:-/dev/sda}                # source and target SD card device, examples: /dev/sdd, /dev/mmcblk0 ...
+IMAGE_NAME="/tmp/pi4_v20200608"
+# IMAGE_NAME=${IMAGE_NAME:-image}           # image name, alternative with date and time: "image_$(date +"%y%m%d%H%M%S")"
 IMAGE=${IMAGE:-${IMAGE_NAME}.img}         # image name with extension
-IMAGE="/mnt/data/jetson_nano_dk_302.img"
-IMAGE="/mnt/linux_data/jetson_nano_dk_302.img"
-DETAILS=${DETAILS:-/tmp/gparted_details.htm} # gparted details file path and name
+DETAILS=${DETAILS:-~/gparted_details.htm} # gparted details file path and name
 
-READ=${READ:-true}              # read image from SD card (false for an already existing image)
+READ=${READ:-false}              # read image from SD card (false for an already existing image)
 RESIZE=${RESIZE:-true}          # resize image with GParted
-FILL=${FILL:-false}             # fill empty space of new image with zeroes, only possible if RESIZE=true
+FILL=${FILL:-true}              # fill empty space of new image with zeroes, only possible if RESIZE=true
 COMPRESS=${COMPRESS:-false}     # compress new image (an extra file is generated)
 WRITE=${WRITE:-false}           # write new image to SD card
 
@@ -77,7 +76,7 @@ if [ $READ == true ]; then
     pause "insert source SD card and >>> close all popup file manager windows <<<"
     checkDevice $DEVICE
     bsize="$(($(blockdev --getsize64 $DEVICE)/1024))K"
-    sudo umount $DEVICE?*               && echo unmount    ok 
+    sudo umount $DEVICE?*               && echo unmount    ok || exit 1
     echo
     echo "generate image from SD card"
     sudo dd if=$DEVICE status=none | pv -s $bsize | dd of=$IMAGE bs=4096 status=none \
@@ -92,10 +91,9 @@ echo
 sudo chown $USER.$USER $IMAGE           && echo owner and group ok || exit 1
 
 if [ $RESIZE == true ]; then
-    sudo fdisk -l $IMAGE
+    #sudo fdisk -l $IMAGE
     #read -p "enter Start of part 2: " start
-    # start="$(sudo parted $IMAGE -ms unit s print | grep "^2" | cut -f2 -d: | sed 's/[^0-9]*//g')"
-    start="$(sudo parted $IMAGE -ms unit s print | grep "^1:" | cut -f2 -d: | sed 's/[^0-9]*//g')"
+    start="$(sudo parted $IMAGE -ms unit s print | grep "^2" | cut -f2 -d: | sed 's/[^0-9]*//g')"
 
     sudo losetup -d $LOOP >/dev/null 2>&1  # remove possible open loop
     sudo losetup $LOOP $IMAGE -o $((start*512)) && echo loop setup ok || exit 1
@@ -113,7 +111,7 @@ if [ $RESIZE == true ]; then
     echo "- close dialog and exit GParted"
     echo
 
-    rm -f /tmp/gparted_details.htm         # remove old details
+    rm -f ~/gparted_details.htm         # remove old details
 
     sudo gparted $LOOP >/dev/null 2>&1  # supresses GLib messages
 
@@ -124,7 +122,7 @@ if [ $RESIZE == true ]; then
 
     size=$(awk '/resize2fs -p / {print $4;}' $DETAILS | awk 'BEGIN { FS="K"; } { print $1; }')
 
-    rm -f /tmp/gparted_details.htm         # remove details
+    rm -f ~/gparted_details.htm         # remove details
 
     if [ -z $size ]; then               # check size
         echo "size not found in details"
@@ -137,19 +135,13 @@ if [ $RESIZE == true ]; then
     sudo losetup -d $LOOP               && echo loop remove ok || exit 1
     sudo losetup $LOOP $IMAGE           && echo loop setup  ok || exit 1
 
-    echo $LOOP
-    pause verify $LOOP
-
-
     newsize="+${size}K"
-    printf "d\n1\nn\np\n1\n$start\n$newsize\np\nw\n" | sudo fdisk $LOOP >/dev/null 2>&1
+    printf "d\n2\nn\np\n2\n$start\n$newsize\np\nw\n" | sudo fdisk $LOOP >/dev/null 2>&1
     echo resize ok
 
-    sudo fdisk -l $LOOP
+    #sudo fdisk -l $LOOP
     #read -p "enter End of part 2: " end
-    end="$(sudo parted $LOOP -ms unit s print | grep "^1:" | cut -f3 -d: | sed 's/[^0-9]*//g')"
-
-    echo $end
+    end="$(sudo parted $LOOP -ms unit s print | grep "^2" | cut -f3 -d: | sed 's/[^0-9]*//g')"
 
     sudo losetup -d $LOOP               && echo loop remove ok || exit 1
     truncate -s $(((end+1)*512)) $IMAGE && echo truncate    ok || exit 1

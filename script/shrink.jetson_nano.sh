@@ -77,7 +77,7 @@ if [ $READ == true ]; then
     pause "insert source SD card and >>> close all popup file manager windows <<<"
     checkDevice $DEVICE
     bsize="$(($(blockdev --getsize64 $DEVICE)/1024))K"
-    sudo umount $DEVICE?*               && echo unmount    ok 
+    sudo umount $DEVICE?*               && echo unmount    ok
     echo
     echo "generate image from SD card"
     sudo dd if=$DEVICE status=none | pv -s $bsize | dd of=$IMAGE bs=4096 status=none \
