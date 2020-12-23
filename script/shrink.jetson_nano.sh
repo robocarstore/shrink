@@ -19,16 +19,16 @@
 # e.g. sudo DEVICE=/dev/sda READ=false ./shrink.sh
 ###
 USER=${USER:-`whoami`}                    # specify user who should own output files
-DEVICE=${DEVICE:-/dev/sdd}                # source and target SD card device, examples: /dev/sdd, /dev/mmcblk0 ...
-IMAGE_NAME=${IMAGE_NAME:-image}           # image name, alternative with date and time: "image_$(date +"%y%m%d%H%M%S")"
-IMAGE=${IMAGE:-${IMAGE_NAME}.img}         # image name with extension
-IMAGE="/mnt/data/jetson_nano_dk_302.img"
-IMAGE="/mnt/linux_data/jetson_nano_dk_302.img"
-DETAILS=${DETAILS:-/tmp/gparted_details.htm} # gparted details file path and name
+DEVICE=${DEVICE:-/dev/sda}                # source and target SD card device, examples: /dev/sdd, /dev/mmcblk0 ...
+
+IMAGE_NAME="jetson_nano_2gb_20201223"
+IMAGE_PATH="/home/jonathantse/projects/donkeycar-images/dist"         
+IMAGE=${IMAGE:-$IMAGE_PATH/${IMAGE_NAME}.img}         # image name with extension
+DETAILS=${DETAILS:-~/gparted_details.htm} # gparted details file path and name
 
 READ=${READ:-true}              # read image from SD card (false for an already existing image)
 RESIZE=${RESIZE:-true}          # resize image with GParted
-FILL=${FILL:-false}             # fill empty space of new image with zeroes, only possible if RESIZE=true
+FILL=${FILL:-true}             # fill empty space of new image with zeroes, only possible if RESIZE=true
 COMPRESS=${COMPRESS:-false}     # compress new image (an extra file is generated)
 WRITE=${WRITE:-false}           # write new image to SD card
 
@@ -75,9 +75,9 @@ if [ $READ == true ]; then
     fi
 
     pause "insert source SD card and >>> close all popup file manager windows <<<"
-    checkDevice $DEVICE
+    # checkDevice $DEVICE
     bsize="$(($(blockdev --getsize64 $DEVICE)/1024))K"
-    sudo umount $DEVICE?*               && echo unmount    ok
+    sudo umount $DEVICE?*               && echo unmount 
     echo
     echo "generate image from SD card"
     sudo dd if=$DEVICE status=none | pv -s $bsize | dd of=$IMAGE bs=4096 status=none \
@@ -113,7 +113,7 @@ if [ $RESIZE == true ]; then
     echo "- close dialog and exit GParted"
     echo
 
-    rm -f /tmp/gparted_details.htm         # remove old details
+    rm -f ~/gparted_details.htm         # remove old details
 
     sudo gparted $LOOP >/dev/null 2>&1  # supresses GLib messages
 
@@ -124,7 +124,7 @@ if [ $RESIZE == true ]; then
 
     size=$(awk '/resize2fs -p / {print $4;}' $DETAILS | awk 'BEGIN { FS="K"; } { print $1; }')
 
-    rm -f /tmp/gparted_details.htm         # remove details
+    rm -f ~/gparted_details.htm         # remove details
 
     if [ -z $size ]; then               # check size
         echo "size not found in details"
@@ -181,7 +181,7 @@ if [ $WRITE == true ]; then
     pause "insert target SD card and >>> close all popup file manager windows <<<"
     checkDevice $DEVICE
     bsize="$(($(blockdev --getsize64 $DEVICE)/1024))K"
-    sudo umount $DEVICE?*               && echo unmount     ok || exit 1
+    sudo umount $DEVICE?*               && echo unmount     ok 
     echo
     echo "write image to SD card"
     sudo dd if=$IMAGE status=none | pv -s $bsize | dd of=$DEVICE bs=4096 status=none \

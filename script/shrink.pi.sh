@@ -15,17 +15,18 @@
 
 ###
 # configuration
-# default values can be overrzidden by passing them as env vars
+# default values can be overridden by passing them as env vars
 # e.g. sudo DEVICE=/dev/sda READ=false ./shrink.sh
 ###
 USER=${USER:-`whoami`}                    # specify user who should own output files
 DEVICE=${DEVICE:-/dev/sda}                # source and target SD card device, examples: /dev/sdd, /dev/mmcblk0 ...
-IMAGE_NAME="/tmp/pi4_v20200608"
+IMAGE_NAME="pi4_v20201014"
+IMAGE_PATH="/home/jonathantse/projects/donkeycar-images/dist"                         # Where to put the image
 # IMAGE_NAME=${IMAGE_NAME:-image}           # image name, alternative with date and time: "image_$(date +"%y%m%d%H%M%S")"
-IMAGE=${IMAGE:-${IMAGE_NAME}.img}         # image name with extension
+IMAGE=${IMAGE:-$IMAGE_PATH/${IMAGE_NAME}.img}         # image name with extension
 DETAILS=${DETAILS:-~/gparted_details.htm} # gparted details file path and name
 
-READ=${READ:-false}              # read image from SD card (false for an already existing image)
+READ=${READ:-true}              # read image from SD card (false for an already existing image)
 RESIZE=${RESIZE:-true}          # resize image with GParted
 FILL=${FILL:-true}              # fill empty space of new image with zeroes, only possible if RESIZE=true
 COMPRESS=${COMPRESS:-false}     # compress new image (an extra file is generated)
