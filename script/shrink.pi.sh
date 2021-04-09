@@ -20,7 +20,7 @@
 ###
 USER=${USER:-`whoami`}                    # specify user who should own output files
 DEVICE=${DEVICE:-/dev/sda}                # source and target SD card device, examples: /dev/sdd, /dev/mmcblk0 ...
-IMAGE_NAME="pi4_v20201014"
+IMAGE_NAME="pi4_dcv4_v20210204"
 IMAGE_PATH="/home/jonathantse/projects/donkeycar-images/dist"                         # Where to put the image
 # IMAGE_NAME=${IMAGE_NAME:-image}           # image name, alternative with date and time: "image_$(date +"%y%m%d%H%M%S")"
 IMAGE=${IMAGE:-$IMAGE_PATH/${IMAGE_NAME}.img}         # image name with extension

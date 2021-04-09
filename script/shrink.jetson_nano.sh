@@ -27,6 +27,7 @@ IMAGE=${IMAGE:-$IMAGE_PATH/${IMAGE_NAME}.img}         # image name with extensio
 DETAILS=${DETAILS:-~/gparted_details.htm} # gparted details file path and name
 
 READ=${READ:-true}              # read image from SD card (false for an already existing image)
+# READ=false
 RESIZE=${RESIZE:-true}          # resize image with GParted
 FILL=${FILL:-true}             # fill empty space of new image with zeroes, only possible if RESIZE=true
 COMPRESS=${COMPRESS:-false}     # compress new image (an extra file is generated)
